@@ -225,10 +225,18 @@ function rankLinks(it){
 /* ================= transport ================= */
 
 const sleep = ms => new Promise(r => setTimeout(r, ms));
-let chain = Promise.resolve();
+// Three lanes rather than one queue. Strict serialisation was safe but slow —
+// six searches end to end. Three at a time cuts first load to roughly a third,
+// and the backoff below still handles a 429 if we push too hard.
+const LANES = 3;
+const lanes = Array.from({ length: LANES }, () => Promise.resolve());
+let nextLane = 0;
+const GAP = 500;
+
 function enqueue(fn){
-  const run = chain.then(fn, fn);
-  chain = run.then(() => sleep(1200), () => sleep(1200));
+  const i = nextLane++ % LANES;
+  const run = lanes[i].then(fn, fn);
+  lanes[i] = run.then(() => sleep(GAP), () => sleep(GAP));
   return run;
 }
 let throttleListener = null;
@@ -243,7 +251,11 @@ async function post(path, body){
     headers:{ "Content-Type":"application/json", "x-seam-key":passcode() },
     body: JSON.stringify(body),
   });
-  if(res.status === 401){ const e = new Error("Passcode rejected."); e.auth = true; throw e; }
+  if(res.status === 401){
+    localStorage.removeItem(KEY);
+    window.dispatchEvent(new Event("seam:authfail"));
+    const e = new Error("Passcode rejected."); e.auth = true; throw e;
+  }
   if(res.status === 429 || res.status === 529 || res.status >= 500){
     const ra = parseInt(res.headers.get("retry-after") || "", 10);
     const e = new Error("throttled");
@@ -399,8 +411,18 @@ const today = () => new Date().toISOString().slice(0,10);
 
 function App(){
   const [authed, setAuthed] = useState(!!passcode());
+  const lock = useCallback(() => { localStorage.removeItem(KEY); setAuthed(false); }, []);
+
+  // A stale passcode used to leave a working-looking page that 401'd on every
+  // request. Any auth failure now drops straight back to the gate.
+  useEffect(() => {
+    const onAuthFail = () => lock();
+    window.addEventListener("seam:authfail", onAuthFail);
+    return () => window.removeEventListener("seam:authfail", onAuthFail);
+  }, [lock]);
+
   if(!authed) return <Gate onIn={() => setAuthed(true)} />;
-  return <Desk onLock={() => { localStorage.removeItem(KEY); setAuthed(false); }} />;
+  return <Desk onLock={lock} />;
 }
 
 function Gate({ onIn }){
@@ -617,6 +639,8 @@ function Desk({ onLock }){
   }, [tab, feeds, saved, scope]);
 
   const busy = Object.values(state).some(s => s === "loading");
+  const done = Object.values(state).filter(s => s === "ok").length;
+  const total = SECTIONS.length + 1;
   const stampText = stamp ? new Date(stamp).toLocaleString(undefined,
     { day:"numeric", month:"short", hour:"2-digit", minute:"2-digit" }) : "not yet fetched";
 
@@ -633,7 +657,7 @@ function Desk({ onLock }){
             {scope.length === REGION.length ? "All 26 countries" : scope.length + " countries"}
           </button>
           <button className="solid" onClick={() => refreshAll()} disabled={busy}>
-            {busy ? "Fetching…" : "Refresh"}
+            {busy ? `Fetching ${done}/${total}…` : "Refresh"}
           </button>
         </div>
       </header>
