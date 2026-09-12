@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<meta name="theme-color" content="#0D1416" />
+<title>Seam — mining, power, freight and capital below the Equator</title>
+<link rel="manifest" href="manifest.json" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap" rel="stylesheet" />
+<style>
+:root{
+  --ground:#0D1416; --panel:#141E1F; --panel2:#1A2626; --line:#26332F;
+  --bone:#E9E4D9; --muted:#8C9A95;
+  --copper:#C97A45; --patina:#63A38F; --amber:#C9A227; --lapis:#7C9CC4;
+  --chalk:#A9B6BC; --flare:#D9634F;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;background:var(--ground);}
+body{color:var(--bone);font-family:'Barlow Condensed',system-ui,sans-serif;
+  min-height:100vh;-webkit-font-smoothing:antialiased;}
+button{font-family:inherit;cursor:pointer;}
+a{color:inherit;text-decoration:none;}
+a:hover{text-decoration:underline;text-decoration-color:var(--copper);text-underline-offset:3px;}
+:focus-visible{outline:2px solid var(--patina);outline-offset:2px;}
+#root{padding-bottom:4rem;}
+
+/* gate */
+.gate-screen{min-height:100vh;display:flex;flex-direction:column;justify-content:center;
+  padding:2rem 1.5rem;max-width:34rem;margin:0 auto;}
+.gate-screen h1{font-size:3rem;margin:0 0 .3rem;letter-spacing:-.02em;}
+.gate-screen p{color:var(--muted);font-family:'Newsreader',Georgia,serif;
+  font-size:1rem;line-height:1.6;margin:0 0 1.4rem;}
+.gate-row{display:flex;gap:.5rem;}
+.gate-row input{flex:1;background:var(--panel);border:1px solid var(--line);color:var(--bone);
+  padding:.6rem .7rem;font-family:inherit;font-size:1.05rem;border-radius:2px;}
+.gate-err{color:var(--flare);font-size:1rem;margin-top:.7rem;}
+
+/* masthead */
+.masthead{display:flex;justify-content:space-between;align-items:flex-end;gap:1rem;
+  flex-wrap:wrap;padding:1.6rem 1.5rem 1.1rem;border-bottom:1px solid var(--line);}
+.masthead h1{margin:0;font-size:2.6rem;font-weight:700;letter-spacing:-.02em;line-height:.9;}
+.mast-sub{margin:.35rem 0 0;color:var(--muted);font-size:1.02rem;}
+.mast-right{display:flex;gap:.5rem;}
+.ghost,.solid{border-radius:2px;padding:.42rem .85rem;font-size:1rem;border:1px solid var(--line);}
+.ghost{background:transparent;color:var(--bone);}
+.ghost:hover{border-color:var(--patina);}
+.solid{background:var(--copper);border-color:var(--copper);color:#160C05;font-weight:600;}
+.solid:disabled{opacity:.5;cursor:default;}
+.link{background:none;border:0;color:var(--patina);font-size:.98rem;padding:0 .5rem;}
+
+/* scope */
+.scope{padding:1rem 1.5rem;border-bottom:1px solid var(--line);background:var(--panel);}
+.scope-head{display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;align-items:center;}
+.scope-head p{margin:0;color:var(--muted);font-size:1rem;max-width:56ch;}
+.chips{display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.7rem;}
+.chip{background:transparent;border:1px solid var(--line);color:var(--muted);
+  border-radius:2px;padding:.2rem .55rem;font-size:.95rem;}
+.chip.on{border-color:var(--patina);color:var(--bone);background:rgba(99,163,143,.12);}
+
+.throttle{padding:.6rem 1.5rem;background:rgba(201,162,39,.12);
+  border-bottom:1px solid var(--line);color:var(--amber);font-size:1rem;}
+
+/* price board */
+.board{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));
+  border-bottom:1px solid var(--line);background:var(--panel);}
+.board-msg{display:block;padding:1.4rem 1.5rem;color:var(--muted);font-size:1.05rem;}
+.board-msg button{margin-top:.6rem;}
+.board-col{padding:1rem 1.2rem 1.2rem;border-right:1px solid var(--line);}
+.board-col:last-child{border-right:0;}
+.board-title{margin:0 0 .7rem;font-size:1.05rem;font-weight:600;color:var(--muted);letter-spacing:.06em;}
+.row{margin-bottom:.85rem;}
+.row-top{display:flex;justify-content:space-between;align-items:baseline;gap:.5rem;}
+.row-name{font-size:1rem;}
+.row-ch{font-size:.98rem;font-variant-numeric:tabular-nums;}
+.row-ch.up{color:var(--patina);} .row-ch.down{color:var(--flare);} .row-ch.flat{color:var(--muted);}
+.row-val{display:flex;align-items:baseline;gap:.35rem;margin-top:-.1rem;}
+.val{font-size:1.85rem;font-weight:600;letter-spacing:-.01em;font-variant-numeric:tabular-nums;line-height:1.05;}
+.unit{font-size:.92rem;color:var(--muted);}
+.bar{height:2px;margin:.3rem 0 .25rem;background:var(--line);transform-origin:left;
+  animation:draw .5s ease-out both;}
+.bar.up{background:var(--patina);} .bar.down{background:var(--flare);}
+@keyframes draw{from{transform:scaleX(0);}to{transform:scaleX(1);}}
+.row-meta{font-size:.88rem;color:var(--muted);}
+
+/* rail */
+.rail{display:flex;overflow-x:auto;border-bottom:1px solid var(--line);
+  position:sticky;top:0;background:var(--ground);z-index:5;-webkit-overflow-scrolling:touch;}
+.rail-btn{display:flex;align-items:baseline;gap:.4rem;background:none;border:0;
+  border-bottom:2px solid transparent;color:var(--muted);
+  padding:.75rem 1.1rem;font-size:1.15rem;white-space:nowrap;}
+.rail-btn.on{color:var(--bone);border-bottom-color:var(--copper);}
+.rail-count{font-size:.85rem;font-variant-numeric:tabular-nums;}
+
+/* feed */
+.feed{padding:1.5rem;max-width:1180px;}
+.mosaic{display:grid;grid-template-columns:repeat(auto-fill,minmax(268px,1fr));gap:1px;
+  background:var(--line);border:1px solid var(--line);margin-top:1px;}
+.card{background:var(--panel);padding:1rem 1.1rem;display:flex;flex-direction:column;
+  border-left:2px solid transparent;}
+.card.copper{border-left-color:var(--copper);}
+.card.patina{border-left-color:var(--patina);}
+.card.amber{border-left-color:var(--amber);}
+.card.lapis{border-left-color:var(--lapis);}
+.card.chalk{border-left-color:var(--chalk);}
+.card.lead{background:var(--panel2);padding:1.5rem 1.6rem;border:1px solid var(--line);border-left-width:2px;}
+.card-head{display:flex;gap:.4rem;align-items:center;flex-wrap:wrap;margin-bottom:.4rem;}
+.from{font-size:.95rem;color:var(--lapis);letter-spacing:.03em;}
+.arrow{font-size:.85rem;color:var(--muted);line-height:1;}
+.country{font-size:.95rem;letter-spacing:.03em;margin-right:.2rem;}
+.tag{font-size:.88rem;color:var(--muted);border:1px solid var(--line);padding:0 .35rem;border-radius:2px;}
+.tag.post{color:var(--chalk);border-color:rgba(169,182,188,.35);}
+.headline{margin:0 0 .45rem;font-size:1.35rem;font-weight:600;line-height:1.12;}
+.card.lead .headline{font-size:2.15rem;max-width:22ch;}
+.summary{font-family:'Newsreader',Georgia,serif;font-size:.95rem;line-height:1.55;
+  color:#C6C2B7;margin:0 0 .9rem;max-width:62ch;}
+.card.lead .summary{font-size:1.12rem;max-width:58ch;}
+.broke{margin:-.5rem 0 .8rem;font-size:.92rem;color:var(--muted);}
+.elsewhere{margin:0 0 .85rem;padding:.45rem .6rem;background:rgba(99,163,143,.08);
+  border-left:2px solid var(--patina);display:flex;flex-wrap:wrap;gap:.15rem .55rem;align-items:baseline;}
+.elsewhere-label{font-size:.92rem;color:var(--muted);}
+.elsewhere-links{display:flex;flex-wrap:wrap;gap:.15rem .7rem;}
+.elsewhere-links a{font-size:.95rem;color:var(--patina);text-decoration:underline;
+  text-decoration-color:rgba(99,163,143,.4);text-underline-offset:3px;}
+.elsewhere-links em{font-style:normal;color:var(--muted);font-size:.85rem;}
+.hunt{background:none;border:0;padding:0;color:var(--patina);font-size:.95rem;
+  text-decoration:underline;text-decoration-color:rgba(99,163,143,.4);text-underline-offset:3px;}
+.hunt:disabled{color:var(--muted);cursor:default;text-decoration:none;}
+.card-foot{margin-top:auto;display:flex;justify-content:space-between;align-items:center;gap:.6rem;}
+.source{font-size:.92rem;color:var(--muted);}
+.gate{margin-left:.45rem;font-size:.85rem;padding:0 .3rem;border-radius:2px;border:1px solid var(--line);}
+.gate.hard{color:var(--flare);border-color:rgba(217,99,79,.4);}
+.gate.soft{color:var(--amber);border-color:rgba(201,162,39,.35);}
+.keep{background:none;border:1px solid var(--line);color:var(--muted);
+  border-radius:2px;padding:.15rem .5rem;font-size:.92rem;}
+.keep.on{border-color:var(--patina);color:var(--patina);}
+
+.empty{padding:3rem 0;max-width:52ch;}
+.empty h3{margin:0 0 .4rem;font-size:1.6rem;font-weight:600;}
+.empty p{margin:0 0 .9rem;color:var(--muted);font-family:'Newsreader',Georgia,serif;font-size:1rem;line-height:1.55;}
+.pulse{animation:pulse 1.6s ease-in-out infinite;}
+@keyframes pulse{0%,100%{opacity:.45;}50%{opacity:1;}}
+.foot{padding:0 1.5rem;max-width:76ch;}
+.foot p{color:var(--muted);font-size:.95rem;line-height:1.5;border-top:1px solid var(--line);padding-top:1rem;}
+
+@media (max-width:640px){
+  .masthead{padding:1.2rem 1rem .9rem;} .masthead h1{font-size:2.1rem;}
+  .feed,.scope,.foot,.throttle{padding-left:1rem;padding-right:1rem;}
+  .card.lead .headline{font-size:1.7rem;}
+  .board-col{border-right:0;border-bottom:1px solid var(--line);}
+}
+@media (prefers-reduced-motion:reduce){.bar{animation:none;}.pulse{animation:none;opacity:.8;}}
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js" crossorigin></script>
+
+<script type="text/babel" data-type="module">
+const { useState, useEffect, useCallback, useMemo } = React;
+
+/* ================= region & sections ================= */
+
+const REGION = ["Angola","Botswana","Burundi","Cameroon","Central African Republic",
+"Comoros","Congo-Brazzaville","DRC","Equatorial Guinea","Eswatini","Gabon","Kenya",
+"Lesotho","Madagascar","Malawi","Mauritius","Mozambique","Namibia","Rwanda",
+"São Tomé and Príncipe","Seychelles","South Africa","Tanzania","Uganda","Zambia","Zimbabwe"];
+
+const SECTIONS = [
+  { id:"mining", label:"Mining", accent:"copper", kind:"news",
+    topic:"mining and metals: copper, cobalt, coal, chrome, manganese, PGMs, gold, lithium, graphite, uranium, iron ore, diamonds. Include production and output figures, project milestones and FIDs, mine restarts and closures, licensing and mining-code changes, resource nationalism, export bans, labour action, safety incidents, M&A and equity stakes, exploration results",
+    tags:"output, project, deal, policy, disruption, labour, exploration" },
+  { id:"power", label:"Solar & hydro", accent:"patina", kind:"news",
+    topic:"solar and hydropower: utility-scale solar and hydro projects, captive and mine-site generation, IPP procurement rounds, power purchase agreements, wheeling and trading rules, grid and transmission build-out, regional power pools (SAPP, EAPP), hydrology and dam levels, load-shedding and generation outages, financing and DFI commitments",
+    tags:"project, PPA, grid, financing, policy, outage" },
+  { id:"trade", label:"Trading & logistics", accent:"amber", kind:"news",
+    topic:"commodity trading and bulk logistics: rail and port throughput, the Lobito, Walvis Bay, Beira, Nacala, Maputo, Dar es Salaam, Durban and Richards Bay corridors, Transnet and regional rail operators, truck border queues, freight rates and demurrage, offtake and trading agreements, trader activity, customs and export duties, corridor investment",
+    tags:"rail, port, corridor, freight, offtake, policy, disruption" },
+  { id:"capital", label:"Inbound capital", accent:"lapis", kind:"news",
+    topic:"foreign and international money entering the region's mining, solar and hydropower, and commodity trading and logistics sectors. Include: investment commitments and final investment decisions by non-African companies; project finance, debt packages and syndications; lending and guarantees from development banks and export credit agencies (IFC, World Bank, AfDB, Afreximbank, TDB, US DFC, US EXIM, EIB, EBRD, JBIC and NEXI, KEXIM, China Exim and Sinosure, UKEF, Proparco, FMO, BII, DEG); sovereign wealth fund and private equity entries; critical-minerals agreements, MoUs and supply deals between foreign governments and African states; offtake, streaming and prepayment deals signed by international traders, smelters and OEMs; joint ventures, equity stakes and acquisitions by groups from China, the Gulf, India, Japan, Korea, Turkey, Indonesia, the EU, UK, US, Australia, Canada and Brazil; corridor and infrastructure funding such as Lobito; and companies opening offices or entering a country for the first time",
+    tags:"finance, FID, MoU, equity, offtake, guarantee, entry" },
+  { id:"x", label:"From X", accent:"chalk", kind:"x",
+    topic:"posts on X", tags:"post, scoop, official, market, field" },
+];
+
+const NEWS_SECTIONS = SECTIONS.filter(s => s.kind === "news");
+const EMPTY_FEEDS = () => Object.fromEntries(SECTIONS.map(s => [s.id, []]));
+
+/* ================= access tiers ================= */
+
+const PAYWALLED = ["nytimes.com","wsj.com","ft.com","bloomberg.com","forbes.com","economist.com",
+"barrons.com","thetimes.co.uk","telegraph.co.uk","afr.com","nikkei.com","businesslive.co.za",
+"financialmail.co.za","theafricareport.com","africaintelligence.com","spglobal.com",
+"argusmedia.com","fastmarkets.com","cru-group.com","energyintel.com","mlex.com","globaldata.com"];
+const METERED = ["reuters.com","news24.com","miningmx.com","washingtonpost.com",
+"theaustralian.com.au","businessinsider.com","scmp.com","thenationalnews.com"];
+const BYPASS = ["archive.ph","archive.today","archive.is","archive.li","archive.vn","12ft.io",
+"12ft.dev","freedium","removepaywall","paywallbuster","txtify.it","webcache.googleusercontent.com"];
+
+const hostOf = u => { try { return new URL(u).hostname.replace(/^www\./,"").toLowerCase(); } catch { return ""; } };
+const isBypass = u => { const h = hostOf(u); return BYPASS.some(b => h.includes(b)); };
+function accessOf(url, claimed){
+  const h = hostOf(url);
+  if(!h) return "free";
+  if(PAYWALLED.some(d => h.endsWith(d))) return "paywalled";
+  if(METERED.some(d => h.endsWith(d))) return "metered";
+  return claimed === "paywalled" || claimed === "metered" ? claimed : "free";
+}
+const RANK = { free:0, metered:1, paywalled:2 };
+function rankLinks(it){
+  const out = [];
+  const add = (o,u,p) => {
+    if(!u || isBypass(u) || out.some(c => c.url === u)) return;
+    out.push({ outlet:o || hostOf(u), url:u, access:accessOf(u,p) });
+  };
+  add(it.o, it.u, it.p);
+  (Array.isArray(it.alt) ? it.alt : []).forEach(a => add(a.o, a.u, a.p));
+  return out.sort((a,b) => RANK[a.access] - RANK[b.access]);
+}
+
+/* ================= transport ================= */
+
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+let chain = Promise.resolve();
+function enqueue(fn){
+  const run = chain.then(fn, fn);
+  chain = run.then(() => sleep(1200), () => sleep(1200));
+  return run;
+}
+let throttleListener = null;
+const onThrottle = fn => { throttleListener = fn; };
+
+const KEY = "seam:passcode";
+const passcode = () => localStorage.getItem(KEY) || "";
+
+async function post(path, body){
+  const res = await fetch(path, {
+    method:"POST",
+    headers:{ "Content-Type":"application/json", "x-seam-key":passcode() },
+    body: JSON.stringify(body),
+  });
+  if(res.status === 401){ const e = new Error("Passcode rejected."); e.auth = true; throw e; }
+  if(res.status === 429 || res.status === 529 || res.status >= 500){
+    const ra = parseInt(res.headers.get("retry-after") || "", 10);
+    const e = new Error("throttled");
+    e.transient = true; e.after = Number.isFinite(ra) ? ra*1000 : null;
+    throw e;
+  }
+  if(!res.ok){
+    let detail = "";
+    try { detail = (await res.json()).error || ""; } catch {}
+    throw new Error("Request failed (" + res.status + ") " + detail);
+  }
+  return res.json();
+}
+
+async function ask(prompt){
+  return enqueue(async () => {
+    let wait = 4000;
+    for(let i=0;i<5;i++){
+      try {
+        const out = await post("/api/claude", { prompt });
+        throttleListener && throttleListener(null);
+        return out.text || "";
+      } catch(err){
+        if(!err.transient || i === 4){
+          throttleListener && throttleListener(null);
+          throw err.transient ? new Error("Rate limited. Wait a minute, then Refresh.") : err;
+        }
+        const d = err.after || wait;
+        throttleListener && throttleListener(Math.round(d/1000));
+        await sleep(d);
+        wait = Math.min(wait*2, 30000);
+      }
+    }
+  });
+}
+
+/* ================= JSON salvage ================= */
+
+function repairJson(src){
+  const stack = []; let inStr=false, esc=false, safe=null;
+  for(let i=0;i<src.length;i++){
+    const ch = src[i];
+    if(inStr){
+      if(esc) esc=false; else if(ch==="\\") esc=true; else if(ch==='"') inStr=false;
+      continue;
+    }
+    if(ch==='"'){ inStr=true; continue; }
+    if(ch==="{"||ch==="[") stack.push(ch==="{"?"}":"]");
+    else if(ch==="}"||ch==="]"){ stack.pop(); if(stack.length) safe={i:i+1, close:stack.slice().reverse().join("")}; }
+    else if(ch===","&&stack.length) safe={i, close:stack.slice().reverse().join("")};
+  }
+  if(!safe) return null;
+  return src.slice(0,safe.i).replace(/,\s*$/,"") + safe.close;
+}
+function carveJson(text){
+  const cleaned = String(text||"").replace(/```json/gi,"").replace(/```/g,"").trim();
+  const a = cleaned.indexOf("{");
+  if(a === -1) throw new Error("No JSON came back — the model answered in prose.");
+  const b = cleaned.lastIndexOf("}");
+  if(b > a){ try { return JSON.parse(cleaned.slice(a,b+1)); } catch {} }
+  const patched = repairJson(cleaned.slice(a));
+  if(patched){ try { return JSON.parse(patched); } catch {} }
+  throw new Error("Response was malformed or cut short. Try that section again.");
+}
+
+/* ================= prompts ================= */
+
+const PRICE_PROMPT = `Search for the most recent published prices for these commodity benchmarks. Prioritise the freshest figures from exchanges, price reporting agencies, government indices and financial news.
+
+Copper: LME 3-month, LME cash settlement, COMEX front month, SHFE front month.
+Thermal coal: Richards Bay FOB (API4), Newcastle FOB (GCNewc/API5), Rotterdam CIF (API2), Indonesian ICI-4.
+Coking coal: Premium Low-Vol Hard Coking Coal FOB Australia, PLV HCC CFR China.
+Metallurgical coke: FOB China, CFR India.
+
+Return ONLY minified JSON, no markdown fences, no preamble:
+{"groups":[{"g":"Copper","rows":[{"n":"LME 3-month","v":"9412","u":"US$/t","ch":"+0.8%","dir":"up","src":"LME","d":"YYYY-MM-DD"}]}]}
+
+Rules: dir is "up","down" or "flat". v is the number only. ch is the change with sign, or "". d is the date the price refers to. src short. Include every benchmark; use "n/a" for v if not found. Complete JSON under 750 tokens.`;
+
+function newsPrompt(section, scope){
+  return `You are a commodities and industrials news desk covering Central and Southern Africa. Search the web for the most consequential news of the past 7 days about ${section.topic}.
+
+Countries in scope: ${scope.join(", ")}. Counterparties may be anywhere in the world, but every story must concern a project, asset, route or market inside the scope list.
+
+Return ONLY minified JSON, no markdown fences, no preamble:
+{"items":[{"h":"headline, max 80 chars","s":"self-contained summary, max 32 words","c":"African country","f":"foreign company, lender or government","o":"publication the link points to","u":"https://...","p":"free|metered|paywalled","alt":[{"o":"outlet","u":"https://...","p":"free|metered"}],"b":"outlet that broke the story","d":"YYYY-MM-DD","t":"tag"}]}
+
+Rules: exactly 4 items, most important first. t is one of: ${section.tags}. u must be a real URL from your search results, never invented. c must be one country from the scope list. f names the non-African party at the centre of the story, empty string when purely domestic.
+
+Write s so the reader gets the substance without opening the link: what happened, the figures, the named parties, the consequence. No teasers.
+
+Readability: u must be openable without a paid subscription. If the strongest account sits behind a paywall — NYT, WSJ, FT, Bloomberg, Forbes, The Economist, Business Day, Financial Mail, The Africa Report, Africa Intelligence, or a price reporting agency — search again and return a freely readable version: a wire pickup, the company's own release or SENS/ASX/TSX filing, a regulator or ministry statement, a trade title such as Mining Weekly, Engineering News, Mining.com or ESI Africa, or regional press. Set b to the outlet that broke it.
+
+alt holds at most one other publication carrying the same story, openable without a subscription, same event not a follow-up. Populate alt only when p is "metered" or "paywalled"; otherwise "alt":[]. Never return an archive, cache or paywall-bypass mirror (archive.today, archive.ph, 12ft.io, freedium) in u or alt. If nothing free covers it, return the paywalled link with p "paywalled".
+
+Prefer hard news with numbers, named companies and decisions. Complete JSON under 800 tokens — trim summaries before dropping brackets.`;
+}
+
+function freeVersionPrompt(item){
+  return `Find where this news story can be read without a paid subscription.
+
+Headline: ${item.headline}
+Reported by: ${item.broke || item.outlet}
+Country: ${item.country}
+Date: ${item.date}
+Substance: ${item.summary}
+
+Search for other publications carrying the same event: wire pickups syndicated to a free site, the company's own release or a SENS, JSE, ASX, TSX, LSE or SEC filing, government, ministry, regulator or development-bank statements, trade press (Mining Weekly, Engineering News, Mining.com, ESI Africa, Miningmx, African Business), regional news sites.
+
+Never return: archive, cache or paywall-bypass mirrors; aggregator pages with no article text; a different story; the paywalled original again.
+
+Return ONLY minified JSON: {"alt":[{"o":"outlet","u":"https://...","p":"free|metered"}]}
+Up to 3 entries, real URLs from your search results. Return {"alt":[]} if it is genuinely only behind a paywall.`;
+}
+
+function xFilterPrompt(posts, scope){
+  const lines = posts.slice(0, 60).map(p =>
+    `@${p.handle} | ${p.date} | ${p.likes}L ${p.reposts}R | ${p.text.replace(/\s+/g," ").slice(0,220)} | ${p.url}`
+  ).join("\n");
+  return `Below are recent X posts collected on mining, solar and hydropower, commodity trading and logistics, and inbound investment in Central and Southern Africa.
+
+Countries in scope: ${scope.join(", ")}.
+
+Pick the 5 most newsworthy. Keep: breaking reports from journalists, official company or government announcements, verifiable operational detail, corridor and port conditions, deal confirmations. Discard: promotion, token and stock shilling, engagement bait, unsourced rumour, opinion threads, anything you cannot tie to a named party or event.
+
+Return ONLY minified JSON, no fences, no preamble:
+{"items":[{"h":"what the post reports, max 80 chars","s":"the substance in your own words, max 28 words","c":"African country","o":"@handle","u":"post URL exactly as given","d":"YYYY-MM-DD","t":"post|scoop|official|market|field"}]}
+
+Never invent a URL — copy it from the list. If fewer than 5 posts clear the bar, return fewer. Complete JSON under 700 tokens.
+
+POSTS:
+${lines}`;
+}
+
+function xFallbackPrompt(scope){
+  return `Search the web for recent posts and discussion on X (x.com, formerly Twitter) about mining, solar and hydropower, commodity trading and bulk logistics, and foreign investment in these countries: ${scope.slice(0,12).join(", ")}.
+
+Return ONLY minified JSON, no fences:
+{"items":[{"h":"what was posted, max 80 chars","s":"substance, max 28 words","c":"African country","o":"@handle or outlet","u":"https://...","d":"YYYY-MM-DD","t":"post"}]}
+
+Up to 4 items. u must be a real URL from your search results. If X content is not indexed for these topics, return {"items":[]} rather than inventing posts. Complete JSON under 600 tokens.`;
+}
+
+/* ================= storage ================= */
+
+const store = {
+  get(k){ try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : null; } catch { return null; } },
+  set(k,v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
+};
+const today = () => new Date().toISOString().slice(0,10);
+
+/* ================= app ================= */
+
+function App(){
+  const [authed, setAuthed] = useState(!!passcode());
+  if(!authed) return <Gate onIn={() => setAuthed(true)} />;
+  return <Desk onLock={() => { localStorage.removeItem(KEY); setAuthed(false); }} />;
+}
+
+function Gate({ onIn }){
+  const [v, setV] = useState("");
+  const [err, setErr] = useState("");
+  const [busy, setBusy] = useState(false);
+  const go = async () => {
+    setBusy(true); setErr("");
+    localStorage.setItem(KEY, v.trim());
+    try {
+      await post("/api/ping", {});
+      onIn();
+    } catch(e){
+      localStorage.removeItem(KEY);
+      setErr(e.auth ? "That passcode didn't work." : e.message);
+    } finally { setBusy(false); }
+  };
+  return (
+    <div className="gate-screen">
+      <h1>Seam</h1>
+      <p>Mining, power, freight and the money coming in — Central and Southern Africa.
+         Enter the passcode you set when you deployed this.</p>
+      <div className="gate-row">
+        <input type="password" value={v} placeholder="Passcode"
+          onChange={e => setV(e.target.value)}
+          onKeyDown={e => e.key === "Enter" && go()} />
+        <button className="solid" onClick={go} disabled={busy || !v.trim()}>
+          {busy ? "Checking…" : "Enter"}
+        </button>
+      </div>
+      {err && <p className="gate-err">{err}</p>}
+    </div>
+  );
+}
+
+function Desk({ onLock }){
+  const [tab, setTab] = useState("today");
+  const [feeds, setFeeds] = useState(EMPTY_FEEDS);
+  const [state, setState] = useState(() => ({ prices:"idle", ...Object.fromEntries(SECTIONS.map(s => [s.id,"idle"])) }));
+  const [errors, setErrors] = useState({});
+  const [prices, setPrices] = useState(null);
+  const [saved, setSaved] = useState([]);
+  const [scope, setScope] = useState(REGION);
+  const [scopeOpen, setScopeOpen] = useState(false);
+  const [stamp, setStamp] = useState(null);
+  const [booted, setBooted] = useState(false);
+  const [throttled, setThrottled] = useState(null);
+
+  useEffect(() => { onThrottle(setThrottled); return () => onThrottle(null); }, []);
+  const setOne = (k,v) => setState(s => ({ ...s, [k]:v }));
+
+  const loadNews = useCallback(async (section, list) => {
+    setOne(section.id, "loading");
+    setErrors(e => ({ ...e, [section.id]:null }));
+    try {
+      const json = carveJson(await ask(newsPrompt(section, list)));
+      const raw = (Array.isArray(json.items)?json.items:[]).filter(it => it && it.h && it.h.length > 8);
+      if(!raw.length) throw new Error("Nothing usable came back for this section.");
+      const items = raw.map((it,i) => {
+        const links = rankLinks(it);
+        const best = links[0] || { outlet:it.o||"", url:"", access:"none" };
+        const promoted = best.url && it.u && best.url !== it.u;
+        return {
+          id: section.id+":"+(it.u||best.url||i)+":"+String(it.h).slice(0,24),
+          section: section.id, headline: it.h, summary: it.s||"",
+          country: it.c||"", origin: it.f||"", outlet: best.outlet, url: best.url,
+          access: best.access, alts: links.slice(1),
+          broke: it.b || (promoted ? (it.o||"") : ""), date: it.d||"", tag: it.t||"",
+        };
+      });
+      setFeeds(f => ({ ...f, [section.id]:items }));
+      setOne(section.id,"ok");
+      return items;
+    } catch(err){
+      setErrors(e => ({ ...e, [section.id]:err.message }));
+      setOne(section.id,"error");
+      return [];
+    }
+  }, []);
+
+  const loadX = useCallback(async (section, list) => {
+    setOne(section.id, "loading");
+    setErrors(e => ({ ...e, [section.id]:null }));
+    try {
+      let raw = null, viaApi = false;
+      try {
+        const r = await post("/api/x", { countries: list });
+        if(r.configured && Array.isArray(r.posts) && r.posts.length){ raw = r.posts; viaApi = true; }
+        else if(r.configured === false) raw = null;
+        else if(r.error) throw new Error(r.error);
+      } catch(e){ if(e.auth) throw e; }
+
+      const json = carveJson(await ask(
+        viaApi ? xFilterPrompt(raw, list) : xFallbackPrompt(list)
+      ));
+      const items = (Array.isArray(json.items)?json.items:[])
+        .filter(it => it && it.h && it.u && !isBypass(it.u))
+        .map((it,i) => ({
+          id: "x:"+(it.u||i), section:"x", headline:it.h, summary:it.s||"",
+          country:it.c||"", origin:"", outlet:it.o||"X", url:it.u,
+          access:"free", alts:[], broke:"", date:it.d||"", tag:it.t||"post",
+        }));
+      if(!items.length) throw new Error(
+        viaApi ? "Nothing on X cleared the quality bar today."
+               : "X search returned nothing. Add an X API token for real coverage."
+      );
+      setFeeds(f => ({ ...f, x:items }));
+      setOne(section.id,"ok");
+      return items;
+    } catch(err){
+      setErrors(e => ({ ...e, [section.id]:err.message }));
+      setOne(section.id,"error");
+      return [];
+    }
+  }, []);
+
+  const loadSection = useCallback((section, list) =>
+    section.kind === "x" ? loadX(section, list) : loadNews(section, list),
+    [loadX, loadNews]);
+
+  const loadPrices = useCallback(async () => {
+    setOne("prices","loading");
+    setErrors(e => ({ ...e, prices:null }));
+    try {
+      const json = carveJson(await ask(PRICE_PROMPT));
+      const groups = (Array.isArray(json.groups)?json.groups:[])
+        .map(g => ({ ...g, rows:(g.rows||[]).filter(r => r && r.n && r.v) }))
+        .filter(g => g.g && g.rows.length);
+      if(!groups.length) throw new Error("No prices came back.");
+      setPrices(groups); setOne("prices","ok"); return groups;
+    } catch(err){
+      setErrors(e => ({ ...e, prices:err.message }));
+      setOne("prices","error"); return null;
+    }
+  }, []);
+
+  const refreshAll = useCallback(async (listArg) => {
+    const list = listArg || scope;
+    const [p, ...sec] = await Promise.all([ loadPrices(), ...SECTIONS.map(s => loadSection(s, list)) ]);
+    const now = new Date().toISOString();
+    setStamp(now);
+    store.set("seam:cache:v1", { date:today(), stamp:now, prices:p,
+      feeds:Object.fromEntries(SECTIONS.map((s,i) => [s.id, sec[i]])) });
+  }, [loadPrices, loadSection, scope]);
+
+  useEffect(() => {
+    const cache = store.get("seam:cache:v1");
+    const sv = store.get("seam:saved");
+    const pr = store.get("seam:scope");
+    if(sv) setSaved(sv);
+    const list = pr && pr.length ? pr : REGION;
+    setScope(list);
+    if(cache && cache.date === today()){
+      setFeeds({ ...EMPTY_FEEDS(), ...(cache.feeds||{}) });
+      setPrices(cache.prices || null);
+      setStamp(cache.stamp);
+      setState({ prices:"ok", ...Object.fromEntries(SECTIONS.map(s => [s.id,"ok"])) });
+      setBooted(true);
+    } else { setBooted(true); refreshAll(list); }
+  }, []);
+
+  const patchItem = useCallback((id, patch) => {
+    setFeeds(f => {
+      const n = { ...f };
+      for(const k of Object.keys(n)) n[k] = n[k].map(i => i.id === id ? { ...i, ...patch } : i);
+      return n;
+    });
+    setSaved(prev => {
+      if(!prev.some(p => p.id === id)) return prev;
+      const n = prev.map(i => i.id === id ? { ...i, ...patch } : i);
+      store.set("seam:saved", n);
+      return n;
+    });
+  }, []);
+
+  const findFree = useCallback(async (item) => {
+    const json = carveJson(await ask(freeVersionPrompt(item)));
+    const found = (Array.isArray(json.alt)?json.alt:[])
+      .filter(a => a && a.u && !isBypass(a.u) && a.u !== item.url)
+      .map(a => ({ outlet:a.o||hostOf(a.u), url:a.u, access:accessOf(a.u,a.p) }))
+      .filter(a => !item.alts.some(x => x.url === a.url));
+    const pool = [...item.alts, ...found].sort((a,b) => RANK[a.access]-RANK[b.access]);
+    if(pool.length && RANK[pool[0].access] < RANK[item.access]){
+      const lead = pool[0];
+      patchItem(item.id, { outlet:lead.outlet, url:lead.url, access:lead.access,
+        alts:[...pool.slice(1), { outlet:item.outlet, url:item.url, access:item.access }],
+        broke:item.broke || item.outlet, searched:true });
+    } else patchItem(item.id, { alts:pool, searched:true });
+    return found.length;
+  }, [patchItem]);
+
+  const savedIds = useMemo(() => new Set(saved.map(s => s.id)), [saved]);
+  const toggleSave = (item) => setSaved(prev => {
+    const n = savedIds.has(item.id) ? prev.filter(p => p.id !== item.id)
+      : [{ ...item, savedAt:new Date().toISOString() }, ...prev];
+    store.set("seam:saved", n); return n;
+  });
+  const toggleCountry = (c) => setScope(prev => {
+    const n = prev.includes(c) ? prev.filter(x => x !== c) : [...prev, c];
+    store.set("seam:scope", n); return n;
+  });
+
+  const visible = useMemo(() => {
+    let all;
+    if(tab === "today"){
+      const lists = SECTIONS.map(s => feeds[s.id] || []);
+      const depth = Math.max(0, ...lists.map(l => l.length));
+      all = [];
+      for(let i=0;i<depth;i++) lists.forEach(l => l[i] && all.push(l[i]));
+    } else if(tab === "saved") all = saved;
+    else all = feeds[tab] || [];
+    if(tab === "saved" || scope.length === REGION.length) return all;
+    return all.filter(i => scope.some(c => (i.country||"").includes(c)));
+  }, [tab, feeds, saved, scope]);
+
+  const busy = Object.values(state).some(s => s === "loading");
+  const stampText = stamp ? new Date(stamp).toLocaleString(undefined,
+    { day:"numeric", month:"short", hour:"2-digit", minute:"2-digit" }) : "not yet fetched";
+
+  return (
+    <>
+      <header className="masthead">
+        <div>
+          <h1>Seam</h1>
+          <p className="mast-sub">Mining, power, freight and the money coming in ·{" "}
+            {new Date().toLocaleDateString(undefined,{ weekday:"long", day:"numeric", month:"long" })}</p>
+        </div>
+        <div className="mast-right">
+          <button className="ghost" onClick={() => setScopeOpen(v => !v)}>
+            {scope.length === REGION.length ? "All 26 countries" : scope.length + " countries"}
+          </button>
+          <button className="solid" onClick={() => refreshAll()} disabled={busy}>
+            {busy ? "Fetching…" : "Refresh"}
+          </button>
+        </div>
+      </header>
+
+      {scopeOpen && (
+        <div className="scope">
+          <div className="scope-head">
+            <p>Countries in scope. Turning one off filters the feed and narrows the next fetch.</p>
+            <div>
+              <button className="link" onClick={() => { setScope(REGION); store.set("seam:scope",REGION); }}>Select all</button>
+              <button className="link" onClick={() => { setScope([]); store.set("seam:scope",[]); }}>Clear</button>
+              <button className="link" onClick={onLock}>Lock</button>
+            </div>
+          </div>
+          <div className="chips">
+            {REGION.map(c => (
+              <button key={c} className={"chip"+(scope.includes(c)?" on":"")} onClick={() => toggleCountry(c)}>{c}</button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {throttled && <div className="throttle">Hit the API rate limit. Waiting {throttled}s, then carrying on.</div>}
+
+      <PriceBoard groups={prices} state={state.prices} error={errors.prices} onRetry={loadPrices} />
+
+      <nav className="rail" role="tablist">
+        {[{id:"today",label:"Today"}, ...SECTIONS, {id:"saved",label:"Saved"}].map(s => (
+          <button key={s.id} role="tab" aria-selected={tab===s.id}
+            className={"rail-btn"+(tab===s.id?" on":"")} onClick={() => setTab(s.id)}>
+            <span>{s.label}</span>
+            <span className="rail-count">
+              {s.id==="saved" ? saved.length
+                : s.id==="today" ? SECTIONS.reduce((n,x) => n+(feeds[x.id]||[]).length, 0)
+                : (feeds[s.id]||[]).length}
+            </span>
+          </button>
+        ))}
+      </nav>
+
+      <main className="feed">
+        <Feed tab={tab} items={visible} state={state} errors={errors} savedIds={savedIds}
+          onSave={toggleSave} onFindFree={findFree} booted={booted}
+          onRetry={id => { const s = SECTIONS.find(x => x.id === id); if(s) loadSection(s, scope); }} />
+      </main>
+
+      <footer className="foot">
+        <p>Last fetched {stampText}. Summaries are written by Claude from the linked reporting, so read them
+        as a digest rather than a quote. Links go to a freely readable version wherever one exists; anything
+        still behind a wall is marked. Prices come from public sources at fetch time and can lag a licensed
+        feed, so check the original before trading on anything here.</p>
+      </footer>
+    </>
+  );
+}
+
+function PriceBoard({ groups, state, error, onRetry }){
+  if(state === "error") return (
+    <section className="board board-msg">
+      <p>Prices didn't come through. {error}</p>
+      <button className="ghost" onClick={onRetry}>Try again</button>
+    </section>
+  );
+  if(!groups) return (
+    <section className="board board-msg">
+      <p className="pulse">Pulling copper, coal, coking coal and coke…</p>
+    </section>
+  );
+  return (
+    <section className="board" aria-label="Commodity prices">
+      {groups.map(g => (
+        <div className="board-col" key={g.g}>
+          <h2 className="board-title">{g.g}</h2>
+          {(g.rows||[]).map((r,i) => (
+            <div className="row" key={i}>
+              <div className="row-top">
+                <span className="row-name">{r.n}</span>
+                <span className={"row-ch "+(r.dir||"flat")}>{r.ch || "—"}</span>
+              </div>
+              <div className="row-val"><span className="val">{r.v}</span><span className="unit">{r.u}</span></div>
+              <div className={"bar "+(r.dir||"flat")} />
+              <div className="row-meta">{r.src}{r.d ? " · "+r.d : ""}</div>
+            </div>
+          ))}
+        </div>
+      ))}
+    </section>
+  );
+}
+
+function Feed({ tab, items, state, errors, savedIds, onSave, onFindFree, onRetry, booted }){
+  const st = tab === "today"
+    ? (SECTIONS.every(s => state[s.id]==="ok") ? "ok"
+      : SECTIONS.some(s => state[s.id]==="loading") ? "loading" : "mixed")
+    : state[tab];
+
+  if(tab === "saved" && !items.length) return (
+    <div className="empty"><h3>Nothing saved yet</h3>
+      <p>Hit Keep on any story and it will wait for you here.</p></div>
+  );
+  if(booted && st === "loading" && !items.length) return (
+    <div className="empty"><h3 className="pulse">Reading the wires</h3>
+      <p>Searching regional trade press, exchanges, company filings and X.</p></div>
+  );
+  if(st === "error" && !items.length) return (
+    <div className="empty"><h3>That section didn't load</h3><p>{errors[tab]}</p>
+      <button className="ghost" onClick={() => onRetry(tab)}>Try again</button></div>
+  );
+  if(!items.length) return (
+    <div className="empty"><h3>No stories match your country filter</h3>
+      <p>Widen the scope at the top to see the rest of the region.</p></div>
+  );
+
+  const [lead, ...rest] = items;
+  return (
+    <>
+      <Card item={lead} lead saved={savedIds.has(lead.id)} onSave={onSave} onFindFree={onFindFree} />
+      <div className="mosaic">
+        {rest.map(it => <Card key={it.id} item={it} saved={savedIds.has(it.id)} onSave={onSave} onFindFree={onFindFree} />)}
+      </div>
+    </>
+  );
+}
+
+function Card({ item, lead, saved, onSave, onFindFree }){
+  const accent = (SECTIONS.find(s => s.id === item.section)||{}).accent || "copper";
+  const [hunting, setHunting] = useState(false);
+  const [hunted, setHunted] = useState(0);
+  const alts = item.alts || [];
+  const gated = item.access === "paywalled" || item.access === "metered";
+  const openable = alts.filter(a => a.access !== "paywalled");
+  const isX = item.section === "x";
+
+  const hunt = async () => {
+    setHunting(true);
+    try { setHunted(await onFindFree(item)); }
+    catch { setHunted(-1); }
+    finally { setHunting(false); }
+  };
+
+  return (
+    <article className={"card "+accent+(lead?" lead":"")}>
+      <div className="card-head">
+        {item.origin && <><span className="from">{item.origin}</span><span className="arrow">&#8594;</span></>}
+        <span className="country">{item.country}</span>
+        {item.tag && <span className={"tag"+(isX?" post":"")}>{item.tag}</span>}
+      </div>
+      <h3 className="headline">
+        {item.url ? <a href={item.url} target="_blank" rel="noopener noreferrer">{item.headline}</a> : item.headline}
+      </h3>
+      <p className="summary">{item.summary}</p>
+      {item.broke && item.broke !== item.outlet && <p className="broke">First reported by {item.broke}</p>}
+
+      {gated && (
+        <div className="elsewhere">
+          {openable.length ? (
+            <>
+              <span className="elsewhere-label">Same story, free at</span>
+              <span className="elsewhere-links">
+                {openable.map(a => (
+                  <a key={a.url} href={a.url} target="_blank" rel="noopener noreferrer">
+                    {a.outlet}{a.access==="metered" && <em> (metered)</em>}
+                  </a>
+                ))}
+              </span>
+            </>
+          ) : (item.searched || hunted !== 0) ? (
+            <span className="elsewhere-label">
+              {hunted === -1 ? "That search didn't complete. Try again."
+                : "No free version found — this one is only behind the wall."}
+            </span>
+          ) : (
+            <button className="hunt" onClick={hunt} disabled={hunting}>
+              {hunting ? "Searching for a free version…" : "Find it free elsewhere"}
+            </button>
+          )}
+        </div>
+      )}
+
+      <div className="card-foot">
+        <span className="source">
+          {item.outlet}{item.date ? " · "+item.date : ""}
+          {item.access==="paywalled" && <span className="gate hard">subscription</span>}
+          {item.access==="metered" && <span className="gate soft">metered</span>}
+        </span>
+        <button className={"keep"+(saved?" on":"")} onClick={() => onSave(item)} aria-pressed={saved}>
+          {saved ? "Kept" : "Keep"}
+        </button>
+      </div>
+    </article>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>
