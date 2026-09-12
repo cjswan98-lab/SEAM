@@ -46,7 +46,7 @@ export default async (request) => {
 
   if (!res.ok) {
     const detail = await res.text();
-    return json({ error: detail.slice(0, 300) }, res.status);
+    const bad = res.status === 401 || res.status === 403; return json({ error: (bad ? "Anthropic rejected the API key. Check ANTHROPIC_API_KEY and that the account has credit. " : "") + detail.slice(0, 300) }, bad ? 502 : res.status);
   }
 
   const data = await res.json();
